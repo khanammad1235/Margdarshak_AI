@@ -109,36 +109,56 @@ const endChat = asyncHandler(async (req, res) => {
 // @desc    Fetch past conversation summaries
 // @route   GET /api/chat/history/:studentId
 // @access  Private (Counselor or Student/Self)
-const getChatHistory = asyncHandler(async (req, res) => {
-  const { studentId } = req.params;
+// const getChatHistory = asyncHandler(async (req, res) => {
+//   const { studentId } = req.params;
 
-  // Check if student exists
-  const student = await Student.findOne({ studentID: _id });
+//   // Check if student exists
+//   const student = await Student.findOne({ studentID: studentId });
+//   if (!student) {
+//     res.status(404);
+//     throw new Error('Student not found');
+//   }
+
+//   // Authorization check (Self or Counselor from same branch)
+//   if (req.user.role === 'STUDENT' && req.user.userID !== studentId) {
+//     res.status(401);
+//     throw new Error('Not authorized to view other history');
+//   }
+
+//   const history = await Conversation.find({ 
+//     studentID: student._id, 
+//     isDeleted: false 
+//   }).sort({ creationOn: -1 }).select('sessionID sessionSummary creationOn');
+
+//   res.status(200).json(history);
+// });
+
+const lastConversation = asyncHandler(async (req, res) => {
+  const { studentId } = req.params; // Changed from studentId to id to match route
+console.log(studentId)
+  // Check if student exists - fix the query
+  const student = await Student.findById(studentId); // Make sure studentID field exists
   if (!student) {
     res.status(404);
     throw new Error('Student not found');
   }
 
-  // Authorization check (Self or Counselor from same branch)
-  if (req.user.role === 'STUDENT' && req.user.userID !== studentId) {
-    res.status(401);
-    throw new Error('Not authorized to view other history');
+  const lastChat = await Conversation.find({ 
+    studentID: studentId, 
+  })
+
+  if (!lastChat) {
+    res.status(404);
+    throw new Error('No conversations found for this student');
   }
 
-  const history = await Conversation.find({ 
-    studentID: student._id, 
-    isDeleted: false 
-  }).sort({ creationOn: -1 }).select('sessionID sessionSummary creationOn');
-
-  res.status(200).json(history);
+  res.status(200).json(lastChat);
 });
-
-// const lastConversation = asyncHandler(async (req, res) => 
-
 
 module.exports = {
   startChat,
   sendMessage,
   endChat,
-  getChatHistory,
+  // getChatHistory,
+  lastConversation
 };
