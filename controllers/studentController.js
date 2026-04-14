@@ -179,7 +179,7 @@ const bulkUploadMarks = asyncHandler(async (req, res) => {
 
 const addStudent = asyncHandler(async (req, res) => {
   try {
-    const {grNo, name, standard, division, rollNo, emailIDs, mobileNos, counselorInsights, academicRecords, branchID } = req.body;
+    const {grNo, name, standard, division, rollNo, emailIDs, mobileNos, academicRecords, branchID, address } = req.body;
 
     if (!grNo || !name || !standard || !division || !rollNo || emailIDs.length === 0 || mobileNos.length === 0 || !branchID) {
       return res.status(400).json({
@@ -208,8 +208,9 @@ const addStudent = asyncHandler(async (req, res) => {
       organizationID: req.user.organizationID,
       createdBy: req.user._id,
       isDeleted: false,
-      counselorInsights: counselorInsights || {},
-      academicRecords: academicRecords || []
+      academicRecords: academicRecords || [],
+      address: address || {}
+
     });
 
     return res.status(200).json({
@@ -244,9 +245,9 @@ const updateStudent = asyncHandler(async (req, res) => {
       rollNo, 
       emailIDs, 
       mobileNos, 
-      counselorInsights, 
       academicRecords, 
-      branchID
+      branchID,
+      address
     } = req.body;
 
     // Find the student by ID
@@ -302,8 +303,8 @@ const updateStudent = asyncHandler(async (req, res) => {
       ...(emailIDs && { emailIDs: emailIDs.map(email => email.toLowerCase()) }),
       ...(mobileNos && { mobileNos: mobileNos.map(no => no.toString()) }),
       ...(branchID && { branchID }),
-      ...(counselorInsights && { counselorInsights }),
       ...(academicRecords && { academicRecords }),
+      ...(address && { address }),
       updatedBy: req.user._id
     };
 
@@ -368,7 +369,7 @@ payload = { emailID: loginID.toLowerCase() };
 payload = { mobileNo: loginID.toString() };
     }
     console.log("payload", payload)
-    const sendOtp = await axios.post(`http://localhost:5000/api/signup/create`, 
+    const sendOtp = await axios.post(`https://margdarshak-ai-sz4s.onrender.com/api/signup/create`, 
       payload 
     );
     
