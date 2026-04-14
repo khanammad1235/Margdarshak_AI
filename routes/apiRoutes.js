@@ -11,6 +11,8 @@ const { createOtp } = require('../controllers/otpController');
 // const { handleChat } = require('../controllers/counsellorChatController');
 const { protectStudent } = require('../middleware/studentMiddleware');
 const {handleChat} = require('../controllers/newCounsellorChatController');
+const { getChatHistory } = require('../controllers/chatController');
+// const { lastConversation } = require('../controllers/chatController');
 
 // // 1. Auth & Admin Routes (System and User Mgmt)
 router.post('/auth/login', loginUser);
@@ -45,12 +47,14 @@ router.post('/students/verify-otp', verifyStudentOtp);
 // router.patch('/students/:id/marks', protect, authorize('BRANCH_ADMIN', 'COUNSELOR', 'SYSTEM_ADMIN'), updateStudentMarks);
 
 // // 4. AI Counselor & Chat Routes (The Brain)
-// router.get('/chat/history/:studentId', protect, getChatHistory);
+router.get('/students/:studentId/last-conversation', protect, getChatHistory);
 // router.post('/chat/start', protect, authorize('STUDENT'), startChat);
 // router.post('/chat/message', protect, authorize('STUDENT'), sendMessage);
 // router.post('/chat/end', protect, endChat);
  // Note: AI internal trigger logic, potentially protected differently in production
  router.post('/chat', handleChat);
+ // Change this line in your routes
+// router.get('/students/:studentId/last-conversation', protect, lastConversation);
 // router.get('/chat/bootstrap/:grNo', counselorController.bootstrapChat);
 
 

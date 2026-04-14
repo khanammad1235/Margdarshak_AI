@@ -113,7 +113,7 @@ const getChatHistory = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
   // Check if student exists
-  const student = await Student.findOne({ studentID: studentId });
+  const student = await Student.findOne({ studentID: _id });
   if (!student) {
     res.status(404);
     throw new Error('Student not found');
@@ -133,12 +133,12 @@ const getChatHistory = asyncHandler(async (req, res) => {
   res.status(200).json(history);
 });
 
-
+// const lastConversation = asyncHandler(async (req, res) => 
 
 
 module.exports = {
   startChat,
   sendMessage,
   endChat,
-  getChatHistory
+  getChatHistory,
 };

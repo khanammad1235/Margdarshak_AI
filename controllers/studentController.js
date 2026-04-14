@@ -179,9 +179,9 @@ const bulkUploadMarks = asyncHandler(async (req, res) => {
 
 const addStudent = asyncHandler(async (req, res) => {
   try {
-    const {grNo, name, standard, division, rollNo, emailIDs, mobileNos, academicRecords, branchID, address } = req.body;
+    const {grNo, name, standard, division, rollNo, emailIDs, mobileNos,academicRecords, branchID, address } = req.body;
 
-    if (!grNo || !name || !standard || !division || !rollNo || emailIDs.length === 0 || mobileNos.length === 0 || !branchID) {
+    if (!grNo || !name || !standard || !division || !rollNo || emailIDs.length === 0 || mobileNos.length === 0 || !branchID || !address) {
       return res.status(400).json({
         code: "1",
         message: "Please add all required fields"
@@ -204,13 +204,12 @@ const addStudent = asyncHandler(async (req, res) => {
       rollNo,
       emailIDs: emailIDs.map(email => email.toLowerCase()),
       mobileNos: mobileNos.map(no => no.toString()), // Don't convert numbers to lowercase
+      address: address || {},
       branchID,
       organizationID: req.user.organizationID,
       createdBy: req.user._id,
       isDeleted: false,
-      academicRecords: academicRecords || [],
-      address: address || {}
-
+      academicRecords: academicRecords || []
     });
 
     return res.status(200).json({
@@ -246,13 +245,12 @@ const updateStudent = asyncHandler(async (req, res) => {
       emailIDs, 
       mobileNos, 
       academicRecords, 
-      branchID,
+      branchID ,
       address
     } = req.body;
-
     // Find the student by ID
     const student = await Student.findById(id);
-    
+    console.log("req.body", req.body);
     if (!student) {
       return res.status(404).json({
         code: "1",
@@ -369,7 +367,8 @@ payload = { emailID: loginID.toLowerCase() };
 payload = { mobileNo: loginID.toString() };
     }
     console.log("payload", payload)
-    const sendOtp = await axios.post(`https://margdarshak-ai-sz4s.onrender.com/api/signup/create`, 
+    // const sendOtp = await axios.post(`https://margdarshak-ai-sz4s.onrender.com/api/signup/create`,
+      const sendOtp = await axios.post(`http://localhost:5001/api/signup/create`,
       payload 
     );
     
