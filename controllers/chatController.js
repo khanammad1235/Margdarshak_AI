@@ -133,28 +133,95 @@ const endChat = asyncHandler(async (req, res) => {
 //   res.status(200).json(history);
 // });
 
+// In your backend controller
+// In your backend controller - replace the lastConversation function
 const lastConversation = asyncHandler(async (req, res) => {
-  const { studentId } = req.params; // Changed from studentId to id to match route
-console.log(studentId)
-  // Check if student exists - fix the query
-  const student = await Student.findById(studentId); // Make sure studentID field exists
+  const { studentId } = req.params;
+  
+  console.log(`Fetching conversations for studentId: ${studentId}`);
+
+  // Check if student exists
+  const student = await Student.findById(studentId);
   if (!student) {
     res.status(404);
     throw new Error('Student not found');
   }
 
-  const lastChat = await Conversation.find({ 
-    studentID: studentId, 
-  })
+  // Get ALL conversations for this student
+  const conversations = await Conversation.find({ 
+    studentID: studentId 
+  }).sort({ createdAt: 1 }); // Keep ascending for processing
+  
+  console.log(`Found ${conversations.length} conversation documents`);
 
-  if (!lastChat) {
-    res.status(404);
-    throw new Error('No conversations found for this student');
+  // Collect all messages with their timestamps
+  let allMessages = [];
+  
+  for (const conv of conversations) {
+    // Ensure we have a valid timestamp
+    const convTime = conv.timestamp || conv.createdAt || new Date();
+    
+    // If the conversation has a messages array
+    if (conv.messages && Array.isArray(conv.messages)) {
+      const messagesWithTime = conv.messages.map((msg, index) => ({
+        sender: msg.sender === "USER" ? "user" : (msg.sender === "AI" ? "ai" : msg.sender?.toLowerCase()),
+        text: msg.text || msg.message || "",
+        timestamp: msg.timestamp || convTime,
+        sortTime: new Date(msg.timestamp || convTime).getTime()
+      }));
+      allMessages.push(...messagesWithTime);
+    } 
+    // If the conversation is a single message-response pair
+    else if (conv.message && conv.response) {
+      allMessages.push({
+        sender: "user",
+        text: conv.message,
+        timestamp: convTime,
+        sortTime: new Date(convTime).getTime()
+      });
+      allMessages.push({
+        sender: "ai",
+        text: conv.response,
+        timestamp: conv.updatedAt || convTime,
+        sortTime: new Date(conv.updatedAt || convTime).getTime()
+      });
+    }
+    // If the conversation has direct sender/text fields
+    else if (conv.sender && conv.text) {
+      allMessages.push({
+        sender: conv.sender === "USER" ? "user" : (conv.sender === "AI" ? "ai" : conv.sender?.toLowerCase()),
+        text: conv.text,
+        timestamp: convTime,
+        sortTime: new Date(convTime).getTime()
+      });
+    }
   }
-
-  res.status(200).json(lastChat);
+  
+  // CRITICAL FIX: Sort in ASCENDING order (oldest first) for proper chat display
+  // This ensures message 1, then message 2, then message 3 in the array
+  allMessages.sort((a, b) => {
+    return a.sortTime - b.sortTime; // Ascending - oldest first
+  });
+  
+  console.log(`Returning ${allMessages.length} total messages in ASCENDING order (oldest first)`);
+  
+  // Log the order for verification
+  if (allMessages.length > 0) {
+    console.log("=== MESSAGE ORDER (should show oldest to newest) ===");
+    allMessages.forEach((msg, idx) => {
+      console.log(`${idx + 1}. [${msg.sender}] ${new Date(msg.timestamp).toLocaleString()}`);
+    });
+  }
+  
+  // Return the structured messages
+  res.status(200).json({
+    success: true,
+    totalConversations: conversations.length,
+    totalMessages: allMessages.length,
+    messages: allMessages,
+    conversations: conversations
+  });
 });
-
 module.exports = {
   startChat,
   sendMessage,
